@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Arcade Dashboard</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;800&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- SUPABASE & CONFETTI -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* NEW VIBRANT ARCADE COLOR PALETTE */
+        :root { 
+            --dark: #10002B; /* Deep Space Black */
+            --surface: #FFFFFF; 
+            --yellow: #FEE440; /* Vivid Yellow */
+            --primary: #F15BB5; /* Hot Pink */
+            --green: #00F5D4; /* Electric Cyan */
+            --orange: #FF9F1C; /* Bright Orange */
+            --purple: #9D4EDD; /* Vibrant Purple */
+            --bg: #240046; /* Deep Purple Background */
+        }
+        
+        body { 
+            margin: 0; 
+            color: var(--dark); 
+            overflow: hidden; 
+            font-family: 'Nunito', sans-serif; 
+            background-color: var(--bg);
+            /* Upgraded dot grid */
+            background-image: radial-gradient(var(--purple) 3px, transparent 3px);
+            background-size: 30px 30px;
+        }
+        
+        h1, h2, h3, .fredoka, .pts-badge { font-family: 'Fredoka', sans-serif; }
+
+        /* VIBRANT PROGRESS BAR */
+        .class-progress-container { width: 100%; background: var(--surface); height: 35px; position: relative; z-index: 1000; border-bottom: 5px solid var(--dark); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--primary); }
+        .class-progress-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--green); border-right: 5px solid var(--dark); transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 0%; }
+        .class-progress-text { position: relative; z-index: 2; color: var(--dark); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;}
+
+        .split-layout { display: flex; height: calc(100vh - 35px); width: 100vw; position: relative; gap: 15px; padding: 15px; box-sizing: border-box;}
+
+        .left-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 100; min-width: 0; }
+        .right-panel { flex: 1.2; display: flex; flex-direction: column; position: relative; overflow: hidden; z-index: 100; min-width: 0; }
+
+        /* COMMAND BAR */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 10px; }
+        .search-bar { flex: 1; padding: 15px 20px; font-size: 1.2rem; font-weight: 800; background: var(--green); color: var(--dark); border: 4px solid var(--dark); border-radius: 12px; box-shadow: 6px 6px 0 var(--dark); outline: none; }
+        .search-bar::placeholder { color: rgba(16, 0, 43, 0.6); }
+        
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-admin { background: var(--surface); color: var(--dark); border: 4px solid var(--dark); padding: 12px 20px; font-size: 1.1rem; font-weight: 800; border-radius: 12px; cursor: pointer; box-shadow: 6px 6px 0 var(--dark); transition: transform 0.1s, box-shadow 0.1s; }
+        .btn-admin:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 var(--dark); }
+        .btn-prize { background: var(--yellow); }
+        .btn-goal { background: var(--purple); color: white; }
+
+        /* POLAROID ART FRAME */
+        .art-container { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 10px; }
+        .polaroid { background: white; border: 5px solid var(--dark); box-shadow: 10px 10px 0 var(--primary); padding: 20px 20px 60px 20px; width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; position: relative; transform: rotate(-2deg); border-radius: 8px; transition: all 0.3s;}
+        .art-frame { flex: 1; border: 4px solid var(--dark); background-color: var(--yellow); background-size: cover; background-repeat: no-repeat; background-position: center; border-radius: 4px; }
+        .polaroid-text { position: absolute; bottom: 15px; left: 0; width: 100%; text-align: center; font-size: 2rem; font-weight: 800; color: var(--dark); }
+        .no-art-text { position: absolute; top: 40%; width: 100%; text-align: center; color: var(--dark); font-size: 2.5rem; font-weight: 800; display: none; text-transform: uppercase;}
+
+        /* CLOCK BAR */
+        .clock-bar { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            background: var(--surface); padding: 20px 30px; border-radius: 15px; 
+            border: 5px solid var(--dark); box-shadow: 8px 8px 0 var(--orange); 
+            flex-shrink: 0; position: relative; cursor: pointer; transition: transform 0.1s;
+        }
+        .clock-bar:active { transform: scale(0.98); }
+        .clock-time { font-size: 5rem; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; text-shadow: 4px 4px 0 var(--dark); letter-spacing: 2px; }
+        .clock-time .am-pm { font-size: 1.8rem; color: var(--dark); text-shadow: none; vertical-align: top; font-weight: 800; margin-left: 5px; }
+        .clock-date { font-size: 1.4rem; font-weight: 800; color: var(--purple); text-transform: uppercase; margin-top: 5px; letter-spacing: 2px; }
+
+        /* TIMER OVERLAY WIDGET */
+        #timerBox {
+            display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--green); color: var(--dark); border: 5px solid var(--dark);
+            box-shadow: 8px 8px 0 var(--dark); border-radius: 15px; padding: 15px 40px; z-index: 9500; text-align: center;
+        }
+        #timerBox h2 { margin: 0; font-size: 4rem; line-height: 1; text-shadow: 3px 3px 0 var(--surface); }
+
+        #autoModeBadge { 
+            position: absolute; top: -15px; right: -15px; display: none; background: var(--green); color: var(--dark); padding: 8px 20px; border-radius: 8px; border: 4px solid var(--dark); font-weight: 800; font-size: 1.2rem; z-index: 10; box-shadow: 4px 4px 0 var(--dark); animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        #kioskPopup { 
+            position: absolute; bottom: 170px; left: 20px; right: 20px; background: var(--surface); border: 5px solid var(--dark); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 10px 10px 0 var(--purple); display: none; z-index: 9999; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; 
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* LEADERBOARD */
+        .leaderboard-wrapper { flex: 1; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent); }
+        .scroll-track { display: flex; flex-direction: column; gap: 15px; animation: scrollUp 150s linear infinite; padding-right: 15px;}
+        @keyframes scrollUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+        
+        .lb-card { background: var(--surface); border: 4px solid var(--dark); border-radius: 12px; padding: 15px 20px; display: flex; align-items: center; margin: 0 5px; box-shadow: 6px 6px 0 var(--yellow); }
+        .lb-card img { width: 60px; height: 60px; border-radius: 8px; border: 4px solid var(--dark); margin-right: 20px; background: var(--bg); }
+        .lb-card-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .lb-card h3 { margin: 0; font-size: 2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark);}
+        
+        .mini-progress-bg { width: 100%; max-width: 180px; height: 10px; background: #eee; border-radius: 5px; margin-top: 8px; overflow: hidden; border: 3px solid var(--dark);}
+        .mini-progress-fill { height: 100%; background: var(--orange); transition: width 0.5s; }
+        
+        .lb-card p { margin: 0; font-size: 1.8rem; font-weight: 800; background: var(--primary); color: white; padding: 8px 25px; border-radius: 10px; border: 4px solid var(--dark); box-shadow: 4px 4px 0 var(--dark); text-shadow: 2px 2px 0 var(--dark); }
+
+        /* CELEBRATIONS */
+        .celebration-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(36, 0, 70, 0.9); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; overflow: hidden; }
+        .sunburst { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vw; background: repeating-conic-gradient(var(--primary) 0 15deg, transparent 15deg 30deg); animation: spinBurst 15s linear infinite; z-index: -1; opacity: 0.4; transform: translate(-50%, -50%); }
+        @keyframes spinBurst { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        
+        .celebration-box { text-align: center; color: var(--dark); z-index: 10; background: var(--surface); border: 8px solid var(--dark); box-shadow: 20px 20px 0 var(--yellow); padding: 50px; border-radius: 25px;}
+        .celebration-box img { width: 280px; height: 280px; border-radius: 15px; border: 6px solid var(--dark); margin: 25px 0; background: var(--green); box-shadow: 10px 10px 0 var(--dark);}
+        .anim-pop { animation: pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+        @keyframes pop { 0% { transform: scale(0.2) rotate(-10deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        
+        /* VAULT */
+        .mystery-box { font-size: 10rem; cursor: pointer; animation: shake 2s infinite ease-in-out; text-shadow: 8px 8px 0 var(--dark); }
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 20%, 60% { transform: rotate(-15deg); } 40%, 80% { transform: rotate(15deg); } }
+        
+        #revealedState { width: 100%; display: none; flex-direction: column; align-items: center; z-index: 10; }
+        .prize-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; max-width: 95vw; max-height: 65vh; overflow-y: auto; padding: 20px; margin-top: 20px; }
+        .prize-grid::-webkit-scrollbar { width: 15px; }
+        .prize-grid::-webkit-scrollbar-track { background: var(--surface); border-left: 4px solid var(--dark); }
+        .prize-grid::-webkit-scrollbar-thumb { background: var(--primary); border: 4px solid var(--dark); border-radius: 8px; }
+
+        .prize-card { background: var(--surface); padding: 20px; border-radius: 15px; border: 5px solid var(--dark); box-shadow: 8px 8px 0 var(--green); text-align: center; width: 180px; cursor: pointer; transition: transform 0.1s; }
+        .prize-card:active { transform: scale(0.95); }
+        .prize-card img { width: 100px; height: 100px; border-radius: 10px; border: 4px solid var(--dark); margin-bottom: 15px; background: var(--yellow); }
+        .prize-card h3 { margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark); }
+        .prize-card p { margin: 0; font-size: 1.6rem; font-weight: 800; background: var(--orange); color: white; padding: 8px 20px; border-radius: 8px; border: 4px solid var(--dark); display: inline-block; text-shadow: 2px 2px 0 var(--dark); }
+
+    </style>
+</head>
+<body>
+
+    <div class="class-progress-container">
+        <div class="class-progress-fill" id="classProgressBar"></div>
+        <div class="class-progress-text fredoka" id="classProgressText">Loading Class Goal...</div>
+    </div>
+
+    <!-- COUNTDOWN TIMER WIDGET -->
+    <div id="timerBox">
+        <h2 class="fredoka" id="timerDisplay">05:00</h2>
+    </div>
+
+    <div class="split-layout">
+        
+        <div class="left-panel">
+            <div class="top-bar">
+                <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Find a student...">
+                <div class="nav-buttons">
+                    <button type="button" id="btnPauseScroll" onclick="toggleScrollLocal()" class="btn-admin" style="background: var(--surface);">⏸️ Pause</button>
+                    <button type="button" onclick="openPrizeVault(false)" class="btn-admin btn-prize">🎁 Vault</button>
+                </div>
+            </div>
+
+            <div class="art-container">
+                <div class="polaroid">
+                    <div class="art-frame" id="artFrame"></div>
+                    <div class="polaroid-text fredoka">🖼️ Masterpieces</div>
+                    <div class="no-art-text" id="noArtText">Awaiting<br>Art...</div>
+                </div>
+            </div>
+
+            <div class="clock-bar" id="digitalClock" onclick="toggleClockFormat()">
+                <div id="autoModeBadge">🟢 AUTO-SCAN ACTIVE</div>
+                <div class="clock-time fredoka" id="clockTime">12:00 <span class="am-pm">PM</span></div>
+                <div class="clock-date" id="clockDate">Monday, January 1</div>
+            </div>
+
+            <div id="kioskPopup">
+                <h2 style="font-size: 3rem; margin:0; color: var(--dark);" class="fredoka" id="kioskPopupName">Name</h2>
+                <p style="font-size: 1.5rem; margin: 15px 0 0 0; color: var(--dark); font-weight: 800;" id="kioskPopupStatus">Waiting for teacher...</p>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="leaderboard-wrapper">
+                <div class="scroll-track" id="scrollTrack"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="celebrationOverlay" class="celebration-overlay">
+        <div class="sunburst"></div>
+        <div id="celebrationBox" class="celebration-box">
+            <h1 style="font-size: 6rem; margin:0; color: var(--primary); text-shadow: 4px 4px 0 var(--dark);" class="fredoka">LEVEL UP!</h1>
+            <img id="celebrationAvatar" src="" alt="Student Avatar">
+            <h2 id="celebrationName" style="font-size: 5rem; margin:0;" class="fredoka">Name</h2>
+            <div style="font-size: 6rem; color: var(--yellow); font-weight: 800; text-shadow: 4px 4px 0 var(--dark); -webkit-text-stroke: 3px var(--dark);" class="fredoka" id="celebrationPoints">+5</div>
+        </div>
+    </div>
+
+    <div id="milestoneOverlay" class="celebration-overlay" style="z-index: 10005;">
+        <div class="sunburst" style="background: repeating-conic-gradient(var(--green) 0 15deg, transparent 15deg 30deg);"></div>
+        <div id="milestoneBox" class="celebration-box" style="border-color: var(--dark); box-shadow: 20px 20px 0 var(--green);">
+            <h1 style="font-size: 6rem; margin:0; color: var(--green); text-shadow: 4px 4px 0 var(--dark);" class="fredoka">15-PT CLUB!</h1>
+            <img id="milestoneAvatar" src="" alt="Student Avatar">
+            <h2 id="milestoneName" style="font-size: 5rem; margin:0;" class="fredoka">Name</h2>
+            <div style="font-size: 3rem; color: var(--dark); font-weight: 800; margin-top: 15px;">Unlocked the Prize Vault!</div>
+        </div>
+    </div>
+
+    <div id="prizeVaultOverlay" class="celebration-overlay">
+        <div id="mysteryState" style="text-align: center; z-index: 10;">
+            <h1 style="font-size: 6rem; color: var(--surface); text-shadow: 4px 4px 0 var(--dark);" class="fredoka">Who Unlocked a Prize?</h1>
+            <div class="mystery-box" onclick="revealPrizes(false)">🎁</div>
+        </div>
+        <div id="revealedState">
+            <div class="sunburst" style="background: repeating-conic-gradient(var(--yellow) 0 15deg, transparent 15deg 30deg);"></div>
+            <h1 style="color: var(--dark); font-size: 6rem; margin: 0; background: var(--green); padding: 15px 50px; border: 6px solid var(--dark); box-shadow: 12px 12px 0 var(--dark); border-radius: 20px; text-transform: uppercase;" class="fredoka">Prize Winners</h1>
+            <div id="prizeGrid" class="prize-grid"></div>
+            <h2 id="noPrizeMsg" style="font-size: 4rem; color: var(--surface); display: none; margin-top: 50px; text-shadow: 4px 4px 0 var(--dark);">Keep working hard! 🌟</h2>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🚀 SUPABASE CONFIGURATION - ADD KEYS HERE
+        // ==========================================
+        const SUPABASE_URL = "YOUR_PROJECT_URL";
+        const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const room = supabase.channel('classroom');
+
+        let students = []; 
+        let orderedStudents = []; 
+        let celebrationQueue = []; 
+        let isCelebrating = false;
+        let activeKioskStudent = null; 
+        let kioskTimer = null; 
+        let isAutoMode = false; 
+        let scannedThisSession = new Set(); 
+        let knownStudentCount = 0; 
+        let wasSearching = false; 
+        let artworkList = []; 
+        let artIndex = 0; 
+        let artInterval = null;
+        let isScrollPaused = false; 
+        let is24HourFormat = false; 
+
+        // TIMER ENGINE
+        let timerInterval = null;
+        let timerSecondsLeft = 0;
+
+        function startCountdownTimer(seconds) {
+            clearInterval(timerInterval);
+            timerSecondsLeft = seconds;
+            
+            const timerBox = document.getElementById('timerBox');
+            const timerDisplay = document.getElementById('timerDisplay');
+            if (!timerBox || !timerDisplay) return;
+
+            timerBox.style.display = 'block';
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timerSecondsLeft--;
+                if (timerSecondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = "00:00";
+                    fireConfetti();
+                    setTimeout(() => { timerBox.style.display = 'none'; }, 4000);
+                } else {
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function stopCountdownTimer() {
+            clearInterval(timerInterval);
+            const timerBox = document.getElementById('timerBox');
+            if (timerBox) timerBox.style.display = 'none';
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSecondsLeft / 60);
+            const s = timerSecondsLeft % 60;
+            const formatted = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+            document.getElementById('timerDisplay').textContent = formatted;
+        }
+
+        function toggleClockFormat() {
+            is24HourFormat = !is24HourFormat;
+            updateClock();
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            const timeElem = document.getElementById('clockTime');
+            const dateElem = document.getElementById('clockDate');
+            
+            if (is24HourFormat) {
+                let displayHours = hours < 10 ? '0' + hours : hours;
+                if (timeElem) timeElem.innerHTML = `${displayHours}:${minutes}`;
+            } else {
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; 
+                if (timeElem) timeElem.innerHTML = `${hours}:${minutes} <span class="am-pm">${ampm}</span>`;
+            }
+            
+            if (dateElem) {
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                dateElem.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function getSafeAvatar(studentName, url) {
+            const safeName = studentName ? encodeURIComponent(studentName.trim()) : 'Student';
+            const strUrl = url ? url.toString().trim() : "";
+            if (!strUrl || !strUrl.startsWith("http") || strUrl.includes("github.io")) {
+                return `https://api.dicebear.com/9.x/bottts/svg?seed=${safeName}`;
+            }
+            return strUrl;
+        }
+
+        // ==========================================
+        // 📡 REALTIME BROADCAST RECEIVER (Replaces PubNub)
+        // ==========================================
+        room.on('broadcast', { event: 'command' }, (payload) => {
+            try {
+                const msg = payload.payload;
+                if (!msg || !msg.action) return;
+
+                if (msg.action === "setActive") {
+                    if (!msg.name || msg.name === 'none') { 
+                        activeKioskStudent = null; 
+                        document.getElementById('kioskPopup').style.display = 'none'; 
+                    } else { 
+                        const trimmedName = msg.name.trim();
+                        const student = students.find(s => s.Name.trim().toLowerCase() === trimmedName.toLowerCase());
+                        const pts = student ? student.Points : '?';
+                        triggerKioskPopup({ Name: trimmedName, Points: pts }); 
+                    }
+                }
+                else if (msg.action === "toggleDouble") { document.body.classList.toggle('neon-mode', msg.state); }
+                else if (msg.action === "partyConfetti") { fireConfetti(); }
+                else if (msg.action === "startTimer") { startCountdownTimer(msg.duration); }
+                else if (msg.action === "stopTimer") { stopCountdownTimer(); }
+                else if (msg.action === "showVault" || msg.action === "triggerVault") { openPrizeVault(true); }
+                else if (msg.action === "revealVault") { revealPrizes(true); }
+                else if (msg.action === "closeVault") { closePrizeVault(true); }
+                else if (msg.action === "toggleAuto") { setAutoMode(msg.state); }
+                else if (msg.action === "toggleScroll") {
+                    isScrollPaused = msg.paused;
+                    applyScrollState();
+                }
+                else if (msg.action === "scrollVault") { 
+                    const grid = document.getElementById('prizeGrid'); 
+                    if (grid) grid.scrollTop = msg.percent * (grid.scrollHeight - grid.clientHeight); 
+                }
+                else if (msg.action === "updateGoal") {
+                    localStorage.setItem('customGoalEmoji', msg.emoji); 
+                    localStorage.setItem('customGoalName', msg.name); 
+                    localStorage.setItem('customGoalAmount', msg.amount); 
+                    updateClassGoal();
+                }
+                else if (msg.action === "refreshData") {
+                    fetchStudentData(); 
+                }
+                // Visual popups for points handled by Broadcast so they are instant
+                else if (msg.action === "addPoints") {
+                    handlePointCelebration(msg.name, msg.points, msg.isDouble);
+                }
+                else if (msg.action === "bulkAddPoints") {
+                    fireConfetti();
+                }
+            } catch(err) {
+                console.error("Error processing broadcast message:", err);
+            }
+        }).subscribe();
+
+        // ==========================================
+        // 📡 DATABASE REALTIME LISTENER (Replaces Sheet syncing)
+        // ==========================================
+        supabase.channel('db-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, payload => {
+                fetchStudentData(); // Instantly re-fetch data if DB changes
+            })
+            .subscribe();
+
+        function handlePointCelebration(name, pts, isDouble) {
+            const student = students.find(s => s.Name.toLowerCase() === name.toLowerCase());
+            if (student) {
+                const oldPoints = parseInt(student.Points) || 0; 
+                if (pts < 0 && document.getElementById('revealedState').style.display === 'flex') {
+                    // Update visually instantly before DB finishes
+                    student.Points += pts;
+                    revealPrizes(true);
+                }
+                if (pts > 0) {
+                    const isMilestone = (oldPoints < 15 && (oldPoints + pts) >= 15);
+                    celebrationQueue.push({ student: student, pointsGained: pts, isMilestone: isMilestone, isDouble: isDouble });
+                    processCelebrations(); 
+                }
+            }
+        }
+
+        function toggleScrollLocal() {
+            isScrollPaused = !isScrollPaused;
+            applyScrollState();
+            room.send({ type: 'broadcast', event: 'command', payload: { action: "toggleScroll", paused: isScrollPaused } });
+        }
+
+        function applyScrollState() {
+            const track = document.getElementById('scrollTrack');
+            const btn = document.getElementById('btnPauseScroll');
+            if (track) track.style.animationPlayState = isScrollPaused ? 'paused' : 'running';
+            if (btn) btn.innerHTML = isScrollPaused ? '▶️ Play' : '⏸️ Pause';
+        }
+
+        function updateClassGoal() {
+            let total = 0; students.forEach(s => total += parseInt(s.Points) || 0);
+            let goalAmount = parseInt(localStorage.getItem('customGoalAmount')) || 500;
+            let goalEmoji = localStorage.getItem('customGoalEmoji') || '🍕';
+            let goalName = localStorage.getItem('customGoalName') || 'Pizza Party';
+
+            const pct = Math.min((total / goalAmount) * 100, 100);
+            document.getElementById('classProgressBar').style.width = pct + '%';
+            document.getElementById('classProgressText').textContent = `${goalEmoji} ${goalName} Goal: ${total} / ${goalAmount} Points!`;
+        }
+
+        function fireConfetti() {
+            try {
+                if (typeof confetti === 'function') {
+                    var duration = 3000; 
+                    var end = Date.now() + duration;
+                    (function frame() {
+                        confetti({ particleCount: 10, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#FEE440', '#F15BB5', '#00F5D4', '#FF9F1C'] });
+                        confetti({ particleCount: 10, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#FEE440', '#F15BB5', '#00F5D4', '#FF9F1C'] });
+                        if (Date.now() < end) requestAnimationFrame(frame);
+                    }());
+                }
+            } catch(e) {}
+        }
+
+        function getShuffleSeed(name) { if (!window[name]) window[name] = Math.random(); return window[name]; }
+        function shuffleArray(array) { return array.sort((a, b) => getShuffleSeed(a.Name) - getShuffleSeed(b.Name)); }
+
+        function openPrizeVault(fromRemote = false) { 
+            document.getElementById('prizeVaultOverlay').style.display = 'flex'; 
+            document.getElementById('mysteryState').style.display = 'block'; 
+            document.getElementById('revealedState').style.display = 'none'; 
+        }
+        function closePrizeVault(fromRemote = false) { 
+            document.getElementById('prizeVaultOverlay').style.display = 'none'; 
+        }
+        
+        function revealPrizes(fromRemote = false) {
+            document.getElementById('mysteryState').style.display = 'none'; 
+            document.getElementById('revealedState').style.display = 'flex'; 
+            
+            const prizeGrid = document.getElementById('prizeGrid'); 
+            const noPrizeMsg = document.getElementById('noPrizeMsg'); 
+            prizeGrid.innerHTML = ''; 
+            
+            const winners = students.filter(s => parseInt(s.Points) >= 15);
+            if (winners.length === 0) { noPrizeMsg.style.display = 'block'; } 
+            else { 
+                noPrizeMsg.style.display = 'none'; 
+                winners.forEach((w, i) => { 
+                    const c = document.createElement('div'); 
+                    c.className = 'prize-card'; 
+                    c.style.animationDelay = `${i * 0.15}s`; 
+                    c.onclick = function() { 
+                        // Visual update instantly, DB update relies on phone or we can do it here
+                        room.send({ type: 'broadcast', event: 'command', payload: { action: "addPoints", name: w.Name, points: -15, isDouble: false } });
+                        supabase.from('students').update({ points: w.Points - 15 }).eq('name', w.Name).then();
+                    };
+                    
+                    c.innerHTML = `<img src="${w.AvatarURL}" alt="Winner Avatar"><h3 class="fredoka">${w.Name}</h3><p class="pts-badge">⭐ ${w.Points}</p>`; 
+                    prizeGrid.appendChild(c); 
+                }); 
+            }
+        }
+
+        function triggerKioskPopup(student) {
+            activeKioskStudent = student.Name;
+            const popup = document.getElementById('kioskPopup');
+            
+            document.getElementById('kioskPopupName').innerHTML = `
+                ${student.Name}<br>
+                <span class="pts-badge" style="display: inline-block; margin-top: 15px; font-size: 2rem; background: var(--primary); color: white; padding: 8px 30px; border-radius: 12px; border: 4px solid var(--dark); box-shadow: 4px 4px 0 var(--dark);">
+                    ⭐ ${student.Points}
+                </span>
+            `;
+            
+            document.getElementById('kioskPopupStatus').textContent = "Waiting for teacher...";
+            popup.style.display = 'block';
+            
+            clearTimeout(kioskTimer); 
+            kioskTimer = setTimeout(() => { 
+                activeKioskStudent = null; 
+                popup.style.display = 'none'; 
+            }, 10000);
+        }
+
+        function setAutoMode(state) {
+            isAutoMode = state === 'on';
+            const badge = document.getElementById('autoModeBadge');
+            if (badge) badge.style.display = isAutoMode ? 'block' : 'none';
+        }
+
+        // ==========================================
+        // 📥 FETCH DATA FROM SUPABASE
+        // ==========================================
+        async function fetchStudentData() {
+            try {
+                const { data, error } = await supabase.from('students').select('*').order('name');
+                if (error) throw error;
+                
+                const newStudents = data.map(s => {
+                    return { 
+                        Name: s.name, 
+                        Points: s.points, 
+                        Artwork: s.artwork_url, 
+                        AvatarURL: getSafeAvatar(s.name, s.avatar_url) 
+                    };
+                });
+                
+                students = newStudents;
+                if (orderedStudents.length > 0) { 
+                    orderedStudents.forEach(os => { 
+                        const freshData = students.find(s => s.Name === os.Name); 
+                        if (freshData) os.Points = freshData.Points; 
+                    }); 
+                }
+
+                updateClassGoal(); 
+                updateArtworkLoop(); 
+                renderLeaderboard(); 
+                // Note: We don't auto-process celebrations here anymore to avoid double-firing. 
+                // Realtime broadcast handles the trigger instantly!
+            } catch (error) {
+                console.error("Data fetch failed.", error);
+            }
+        }
+
+        function processCelebrations() {
+            if (isCelebrating || celebrationQueue.length === 0 || document.getElementById('prizeVaultOverlay').style.display === 'flex') return;
+            isCelebrating = true;
+            const event = celebrationQueue.shift();
+            
+            if (event.isMilestone) {
+                document.getElementById('milestoneAvatar').src = event.student.AvatarURL;
+                document.getElementById('milestoneName').textContent = event.student.Name;
+                document.getElementById('milestoneBox').className = 'celebration-box anim-pop';
+                document.getElementById('milestoneOverlay').style.display = 'flex';
+                setTimeout(() => { document.getElementById('milestoneOverlay').style.display = 'none'; isCelebrating = false; setTimeout(processCelebrations, 1000); }, 6000); 
+            } else {
+                let ptsText = event.isDouble ? `DOUBLE! +${event.pointsGained}` : `+${event.pointsGained}`;
+                document.getElementById('celebrationAvatar').src = event.student.AvatarURL;
+                document.getElementById('celebrationName').textContent = event.student.Name;
+                document.getElementById('celebrationPoints').textContent = ptsText;
+                document.getElementById('celebrationBox').className = 'celebration-box anim-pop';
+                document.getElementById('celebrationOverlay').style.display = 'flex';
+                setTimeout(() => { document.getElementById('celebrationOverlay').style.display = 'none'; isCelebrating = false; setTimeout(processCelebrations, 1000); }, 4000); 
+            }
+        }
+
+        function updateArtworkLoop() {
+            const newArtList = students.filter(s => {
+                return s.Artwork && s.Artwork.trim() !== "" && s.Artwork.trim().startsWith("http");
+            }).map(s => s.Artwork.trim());
+            
+            if (JSON.stringify(newArtList) !== JSON.stringify(artworkList)) {
+                artworkList = newArtList;
+                if (artworkList.length > 0) {
+                    document.getElementById('noArtText').style.display = 'none';
+                    if (!artInterval) { 
+                        cycleArt(); 
+                        artInterval = setInterval(cycleArt, 6000); 
+                    }
+                } else { 
+                    document.getElementById('noArtText').style.display = 'block'; 
+                    document.getElementById('artFrame').style.backgroundImage = 'none'; 
+                    clearInterval(artInterval); 
+                    artInterval = null; 
+                }
+            }
+        }
+        
+        function cycleArt() { 
+            if (artworkList.length === 0) return; 
+            document.getElementById('artFrame').style.backgroundImage = `url('${artworkList[artIndex]}')`; 
+            artIndex = (artIndex + 1) % artworkList.length; 
+        }
+
+        function renderLeaderboard() {
+            const track = document.getElementById('scrollTrack'); 
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm) { 
+                wasSearching = true; 
+                track.style.animation = 'none'; 
+                track.innerHTML = buildCardsHTML(orderedStudents.filter(s => s.Name.toLowerCase().includes(searchTerm))); 
+                return; 
+            }
+            
+            track.style.animation = 'scrollUp 150s linear infinite';
+            track.style.animationPlayState = isScrollPaused ? 'paused' : 'running';
+            
+            if (knownStudentCount !== students.length || wasSearching) {
+                if (orderedStudents.length !== students.length) orderedStudents = shuffleArray([...students]);
+                track.innerHTML = buildCardsHTML(orderedStudents) + buildCardsHTML(orderedStudents);
+                knownStudentCount = students.length; 
+                wasSearching = false;
+            } else { 
+                updateLeaderboardPoints(); 
+            }
+        }
+        
+        function buildCardsHTML(arr) { 
+            return arr.map(s => `
+                <div class="lb-card" data-student="${s.Name.replace(/[^a-zA-Z0-9]/g, '-')}">
+                    <img src="${s.AvatarURL}" alt="Student Avatar">
+                    <div class="lb-card-info">
+                        <h3 class="fredoka">${s.Name}</h3>
+                        <div class="mini-progress-bg">
+                            <div class="mini-progress-fill" style="width: ${Math.min((s.Points/15)*100, 100)}%"></div>
+                        </div>
+                    </div>
+                    <p class="pts-badge">⭐ ${s.Points}</p>
+                </div>`
+            ).join(''); 
+        }
+        
+        function updateLeaderboardPoints() { 
+            students.forEach(s => { 
+                const safeName = s.Name.replace(/[^a-zA-Z0-9]/g, '-'); 
+                document.querySelectorAll(`[data-student="${safeName}"] .pts-badge`).forEach(b => {
+                    b.innerHTML = `⭐ ${s.Points}`;
+                }); 
+                document.querySelectorAll(`[data-student="${safeName}"] .mini-progress-fill`).forEach(b => {
+                    b.style.width = `${Math.min((s.Points/15)*100, 100)}%`;
+                }); 
+            }); 
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', renderLeaderboard);
+
+        // INITIAL LOAD
+        fetchStudentData(); 
+    </script>
+</body>
+</html>
