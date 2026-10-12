@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* NEW VIBRANT ARCADE COLOR PALETTE */
         :root { 
             --dark: #10002B; 
             --surface: #FFFFFF; 
@@ -20,7 +19,7 @@
             --green: #00F5D4; 
             --orange: #FF9F1C; 
             --purple: #9D4EDD; 
-            --bg: #00F5D4; /* Vibrant Cyan Body for Mobile */
+            --bg: #00F5D4; 
         }
         
         body { 
@@ -52,9 +51,7 @@
         #mobileVaultView { display: none; flex-direction: column; height: 100vh; overflow: hidden; background: var(--purple);}
 
         .remote-bar { padding: 10px 15px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-        .btn-remote { 
-            border: 4px solid var(--dark); padding: 10px; font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 800; border-radius: 10px; cursor: pointer; flex: 1; min-width: 75px; box-shadow: 4px 4px 0 var(--dark); transition: transform 0.1s, box-shadow 0.1s;
-        }
+        .btn-remote { border: 4px solid var(--dark); padding: 10px; font-size: 1rem; font-family: 'Nunito', sans-serif; font-weight: 800; border-radius: 10px; cursor: pointer; flex: 1; min-width: 75px; box-shadow: 4px 4px 0 var(--dark); transition: transform 0.1s, box-shadow 0.1s; }
         .btn-remote:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--dark); }
         
         .btn-vault { background: var(--yellow); color: var(--dark); } 
@@ -63,20 +60,16 @@
         .btn-admin { background: var(--surface); color: var(--dark); } 
         .btn-goal { background: #2196F3; color: white; }
         
-        /* SECTION CARDS */
         .section-card { background: white; margin: 10px 15px; padding: 15px; border-radius: 12px; border: 4px solid var(--dark); box-shadow: 6px 6px 0 var(--dark); text-align: left; }
         .section-title { margin: 0 0 10px 0; font-size: 1.2rem; font-weight: 800; color: var(--dark); display: flex; justify-content: space-between; align-items: center; }
 
-        /* TIMERS */
         .grid-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-mini { background: var(--yellow); border: 3px solid var(--dark); padding: 10px 12px; border-radius: 8px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 3px 3px 0 var(--dark); flex: 1; min-width: 65px; text-align: center; }
         .btn-mini:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--dark); }
 
-        /* SEARCH BAR */
         .search-container { margin: 10px 15px; }
         .remote-search { width: 100%; padding: 15px; font-size: 1.2rem; font-family: 'Fredoka', sans-serif; font-weight: 800; border: 4px solid var(--dark); border-radius: 12px; box-shadow: 6px 6px 0 var(--dark); outline: none; box-sizing: border-box; text-align: center; }
 
-        /* VISUAL ROSTER GRID */
         .roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; padding: 5px; }
         .student-card { background: white; border: 4px solid var(--dark); border-radius: 12px; padding: 10px 5px; text-align: center; box-shadow: 4px 4px 0 var(--dark); cursor: pointer; position: relative; user-select: none; }
         .student-card.selected { background: var(--yellow); border-color: var(--primary); box-shadow: 4px 4px 0 var(--primary); }
@@ -84,7 +77,6 @@
         .student-card h4 { margin: 5px 0 0 0; font-size: 1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .student-card span { font-size: 0.9rem; font-weight: 800; color: var(--purple); }
 
-        /* MULTI-SELECT BAR */
         #bulkActionBar { display: none; position: fixed; bottom: 15px; left: 15px; right: 15px; background: var(--dark); color: white; padding: 15px 20px; border-radius: 15px; border: 4px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 9500; justify-content: space-between; align-items: center; }
 
         .auto-toggle { margin: 0 15px 10px 15px; padding: 15px; background: white; border-radius: 12px; border: 4px solid var(--dark); box-shadow: 6px 6px 0 var(--dark); cursor: pointer; }
@@ -112,6 +104,7 @@
         .vault-winner-card { background: var(--surface); color: var(--dark); border-radius: 10px; padding: 10px 15px; display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 1.3rem; border: 4px solid var(--dark); box-shadow: 4px 4px 0 var(--dark); cursor: pointer; }
         .vault-winner-card img { width: 50px; height: 50px; border-radius: 8px; border: 3px solid var(--dark); background: var(--bg); }
 
+        /* FIX 3: RESTORED PIN MODAL HTML */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(16, 0, 43, 0.9); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--surface); padding: 30px; border-radius: 15px; max-width: 350px; width: 90%; text-align: center; position: relative; border: 6px solid var(--dark); box-shadow: 10px 10px 0 var(--yellow); }
@@ -135,13 +128,11 @@
             <button id="doubleBtn" class="btn-remote" style="background:var(--dark); color:white; min-width: 100%; margin-top: 5px;" onclick="toggleDouble()">🔥 Enable x2 Points</button>
         </div>
 
-        <!-- WHOLE CLASS & MULTI-SELECT ACTIONS -->
         <div class="remote-bar" style="padding-top: 0;">
             <button class="btn-remote" style="background: var(--purple); color: white;" onclick="awardClassPoint()">👥 Class +1</button>
             <button id="btnMultiSelect" class="btn-remote" style="background: var(--surface);" onclick="toggleMultiSelectMode()">☑️ Multi-Select</button>
         </div>
 
-        <!-- TIMER CONTROLS -->
         <div class="section-card">
             <div class="section-title"><span>⏱️ Countdown Timer</span></div>
             <div class="grid-buttons">
@@ -153,19 +144,22 @@
             </div>
         </div>
 
-        <!-- SEARCH BAR -->
+        <!-- QUICK ADMIN BUTTONS FOR PHONE (Goal & DB) -->
+        <div class="remote-bar" style="padding-top: 0;">
+            <button class="btn-remote btn-goal" onclick="openPinModal('goal')">🎯 Edit Goal</button>
+            <button class="btn-remote btn-admin" onclick="openPinModal('database')">⚙️ Database</button>
+        </div>
+
         <div class="search-container">
             <input type="text" id="remoteSearchInput" class="remote-search" list="studentDatalist" placeholder="🔍 Search or tap student below..." onchange="handleRemoteSearch(this.value)">
             <datalist id="studentDatalist"></datalist>
         </div>
 
-        <!-- VISUAL ROSTER GRID -->
         <div class="section-card" style="padding: 10px;">
             <div class="section-title"><span id="rosterHeaderTitle">📋 Student Roster</span></div>
             <div class="roster-grid" id="rosterGrid"></div>
         </div>
 
-        <!-- SINGLE STUDENT ACTION PANEL -->
         <div id="actionPanel">
             <input type="color" id="avatarColor" class="color-picker" title="Change Avatar Color" onchange="updateAvatarColor(this.value)">
             <img id="scanAvatar" src="" alt="Student Avatar">
@@ -194,7 +188,6 @@
         </div>
     </div>
 
-    <!-- BULK ACTION BAR -->
     <div id="bulkActionBar">
         <span id="bulkCountText" style="font-weight: 800; font-size: 1.2rem;">0 Selected</span>
         <div style="display: flex; gap: 5px;">
@@ -206,7 +199,6 @@
 
     <div id="undoToast" onclick="undoLastPoint()">↩️ Undo Last Point</div>
 
-    <!-- VAULT VIEW -->
     <div id="mobileVaultView">
         <header style="background: var(--yellow); color: var(--dark);" class="fredoka">🎁 Prize Vault Control</header>
         <div id="vaultLockedState" style="flex:1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
@@ -220,10 +212,17 @@
         <div style="padding: 20px;"><button class="btn-cancel" style="width: 100%; background: var(--surface); color: var(--dark); border-width: 5px; margin: 0; font-size: 1.5rem;" onclick="sendRealtimeCommand('closeVault'); closePrizeVaultLocal();">✖ Close Vault</button></div>
     </div>
 
-    <!-- MODALS -->
+    <!-- RESTORED PIN MODAL HTML -->
     <div id="pinModal" class="modal-overlay">
-        <!-- Kept functional but hidden behind Goal button -->
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePinModal()">&times;</span>
+            <h2 style="margin-top: 0; color: var(--dark);" class="fredoka">Admin Access</h2>
+            <input type="password" id="pinInput" class="settings-input" style="text-align: center; letter-spacing: 10px; font-size: 2rem;" placeholder="****" maxlength="4">
+            <button type="button" onclick="verifyPin()" class="btn-remote" style="background: var(--green); color: var(--dark); width: 100%; font-size: 1.5rem; padding: 15px;">Unlock</button>
+        </div>
     </div>
+
+    <!-- GOAL MODAL -->
     <div id="goalModal" class="modal-overlay">
         <div class="modal-content">
             <span class="close-btn" onclick="document.getElementById('goalModal').classList.remove('active')">&times;</span>
@@ -246,9 +245,12 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3aW9laGFudXRjb2hreXVveWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MzE2MDcsImV4cCI6MjEwNzQwNzYwN30.NU3o5jnAV6D6y7dE054EqwbPtaDwNRaSj3DznJOp-lU";
         
         
-        // RENAMED TO dbClient to prevent CDN script collision
         const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const room = dbClient.channel('classroom');
+        
+        // Takes you directly to your Supabase project list
+        const ADMIN_SHEET_URL = "https://supabase.com/dashboard/projects";
+        const ADMIN_PIN = "2009";
 
         let students = []; 
         let activeStudentName = 'none'; 
@@ -291,7 +293,6 @@
             });
         }
 
-        // RENDER VISUAL STUDENT ROSTER
         function renderRosterGrid() {
             const grid = document.getElementById('rosterGrid');
             if (!grid) return;
@@ -328,7 +329,6 @@
             }
         }
 
-        // MULTI-SELECT & WHOLE CLASS LOGIC
         function toggleMultiSelectMode() {
             isMultiSelectMode = !isMultiSelectMode;
             const btn = document.getElementById('btnMultiSelect');
@@ -485,14 +485,35 @@
             });
         }
 
+        let pinTarget = '';
         function openPinModal(target) {
-            if (target === 'goal') {
-                document.getElementById('goalEmojiInput').value = localStorage.getItem('customGoalEmoji') || '🍕';
-                document.getElementById('goalNameInput').value = localStorage.getItem('customGoalName') || 'Pizza Party';
-                document.getElementById('goalAmountInput').value = localStorage.getItem('customGoalAmount') || 500;
-                document.getElementById('goalModal').classList.add('active');
-            }
+            pinTarget = target; 
+            document.getElementById('pinInput').value = ''; 
+            document.getElementById('pinModal').classList.add('active'); 
+            document.getElementById('pinInput').focus(); 
         }
+        function closePinModal() { 
+            document.getElementById('pinModal').classList.remove('active'); 
+        }
+        function verifyPin() { 
+            if (document.getElementById('pinInput').value === ADMIN_PIN) { 
+                closePinModal(); 
+                if (pinTarget === 'database') {
+                    window.open(ADMIN_SHEET_URL, '_blank'); 
+                } else if (pinTarget === 'goal') {
+                    document.getElementById('goalEmojiInput').value = localStorage.getItem('customGoalEmoji') || '🍕';
+                    document.getElementById('goalNameInput').value = localStorage.getItem('customGoalName') || 'Pizza Party';
+                    document.getElementById('goalAmountInput').value = localStorage.getItem('customGoalAmount') || 500;
+                    document.getElementById('goalModal').classList.add('active');
+                }
+            } else { 
+                alert("❌ Incorrect PIN!"); 
+                document.getElementById('pinInput').value = ''; 
+            } 
+        }
+        document.getElementById('pinInput').addEventListener('keyup', (e) => { 
+            if (e.key === 'Enter') verifyPin(); 
+        });
 
         function saveGoalSettings() {
             const emoji = document.getElementById('goalEmojiInput').value || '🍕';
@@ -559,10 +580,8 @@
                 undoData = null; 
             }, 5000);
             
-            // Broadcast for instant UI pop on Dashboard
             sendRealtimeCommand('addPoints', { name: activeStudentName, points: finalAmount, isDouble: isDouble });
             
-            // Update Supabase DB directly
             await dbClient.from('students').update({ points: student.Points + finalAmount }).eq('name', activeStudentName);
             
             resetRemote(); 
@@ -592,15 +611,15 @@
             sendRealtimeCommand('setActive', { name: 'none' }); 
         }
 
-        // ==========================================
-        // 📥 FETCH DATA FROM SUPABASE
-        // ==========================================
         async function loadData() {
             try {
                 const { data, error } = await dbClient.from('students').select('*').order('name');
                 if (error) throw error;
                 
-                students = data.map(s => {
+                // FIX 4: Filter out blank rows imported from CSV on the remote too
+                const validData = data.filter(row => row.name && String(row.name).trim() !== "");
+                
+                students = validData.map(s => {
                     return { Name: s.name, Points: s.points, Artwork: s.artwork_url, AvatarURL: getSafeAvatar(s.name, s.avatar_url) };
                 });
                 
@@ -614,9 +633,6 @@
         
         loadData(); 
 
-        // ==========================================
-        // 📸 SUPABASE STORAGE IMAGE UPLOAD
-        // ==========================================
         async function handleImageUpload(input, type) {
             const file = input.files[0];
             if (!file) return;
@@ -627,15 +643,12 @@
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${Date.now()}.${fileExt}`;
                 
-                // Upload to Supabase 'uploads' bucket
                 const { error: uploadError } = await dbClient.storage.from('uploads').upload(fileName, file);
                 if (uploadError) throw uploadError;
 
-                // Get Public URL
                 const { data: publicUrlData } = dbClient.storage.from('uploads').getPublicUrl(fileName);
                 const imageUrl = publicUrlData.publicUrl;
                 
-                // Update Student Record
                 const columnToUpdate = type === 'artwork' ? 'artwork_url' : 'avatar_url';
                 const { error: dbError } = await dbClient.from('students').update({ [columnToUpdate]: imageUrl }).eq('name', activeStudentName);
                 if (dbError) throw dbError;

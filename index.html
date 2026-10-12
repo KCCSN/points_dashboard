@@ -14,14 +14,14 @@
     <style>
         /* NEW VIBRANT ARCADE COLOR PALETTE */
         :root { 
-            --dark: #10002B; /* Deep Space Black */
+            --dark: #10002B; 
             --surface: #FFFFFF; 
-            --yellow: #FEE440; /* Vivid Yellow */
-            --primary: #F15BB5; /* Hot Pink */
-            --green: #00F5D4; /* Electric Cyan */
-            --orange: #FF9F1C; /* Bright Orange */
-            --purple: #9D4EDD; /* Vibrant Purple */
-            --bg: #240046; /* Deep Purple Background */
+            --yellow: #FEE440; 
+            --primary: #F15BB5; 
+            --green: #00F5D4; 
+            --orange: #FF9F1C; 
+            --purple: #9D4EDD; 
+            --bg: #240046; 
         }
         
         body { 
@@ -30,14 +30,16 @@
             overflow: hidden; 
             font-family: 'Nunito', sans-serif; 
             background-color: var(--bg);
-            /* Upgraded dot grid */
             background-image: radial-gradient(var(--purple) 3px, transparent 3px);
             background-size: 30px 30px;
         }
         
         h1, h2, h3, .fredoka, .pts-badge { font-family: 'Fredoka', sans-serif; }
 
-        /* VIBRANT PROGRESS BAR */
+        body.neon-mode .lb-card { box-shadow: 4px 4px 0 var(--primary); border-color: var(--primary); }
+        body.neon-mode .polaroid { box-shadow: 8px 8px 0 var(--green); border-color: var(--green); }
+        body.neon-mode .class-progress-container { border-bottom: 5px solid var(--primary); }
+
         .class-progress-container { width: 100%; background: var(--surface); height: 35px; position: relative; z-index: 1000; border-bottom: 5px solid var(--dark); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 var(--primary); }
         .class-progress-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--green); border-right: 5px solid var(--dark); transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 0%; }
         .class-progress-text { position: relative; z-index: 2; color: var(--dark); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;}
@@ -47,7 +49,6 @@
         .left-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 100; min-width: 0; }
         .right-panel { flex: 1.2; display: flex; flex-direction: column; position: relative; overflow: hidden; z-index: 100; min-width: 0; }
 
-        /* COMMAND BAR */
         .top-bar { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 10px; }
         .search-bar { flex: 1; padding: 15px 20px; font-size: 1.2rem; font-weight: 800; background: var(--green); color: var(--dark); border: 4px solid var(--dark); border-radius: 12px; box-shadow: 6px 6px 0 var(--dark); outline: none; }
         .search-bar::placeholder { color: rgba(16, 0, 43, 0.6); }
@@ -58,14 +59,15 @@
         .btn-prize { background: var(--yellow); }
         .btn-goal { background: var(--purple); color: white; }
 
-        /* POLAROID ART FRAME */
         .art-container { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 10px; }
         .polaroid { background: white; border: 5px solid var(--dark); box-shadow: 10px 10px 0 var(--primary); padding: 20px 20px 60px 20px; width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; position: relative; transform: rotate(-2deg); border-radius: 8px; transition: all 0.3s;}
-        .art-frame { flex: 1; border: 4px solid var(--dark); background-color: var(--yellow); background-size: cover; background-repeat: no-repeat; background-position: center; border-radius: 4px; }
+        
+        /* FIX 2: background-size changed to contain so photos aren't zoomed in */
+        .art-frame { flex: 1; border: 4px solid var(--dark); background-color: var(--yellow); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 4px; }
+        
         .polaroid-text { position: absolute; bottom: 15px; left: 0; width: 100%; text-align: center; font-size: 2rem; font-weight: 800; color: var(--dark); }
         .no-art-text { position: absolute; top: 40%; width: 100%; text-align: center; color: var(--dark); font-size: 2.5rem; font-weight: 800; display: none; text-transform: uppercase;}
 
-        /* CLOCK BAR */
         .clock-bar { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             background: var(--surface); padding: 20px 30px; border-radius: 15px; 
@@ -77,7 +79,6 @@
         .clock-time .am-pm { font-size: 1.8rem; color: var(--dark); text-shadow: none; vertical-align: top; font-weight: 800; margin-left: 5px; }
         .clock-date { font-size: 1.4rem; font-weight: 800; color: var(--purple); text-transform: uppercase; margin-top: 5px; letter-spacing: 2px; }
 
-        /* TIMER OVERLAY WIDGET */
         #timerBox {
             display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
             background: var(--green); color: var(--dark); border: 5px solid var(--dark);
@@ -85,18 +86,12 @@
         }
         #timerBox h2 { margin: 0; font-size: 4rem; line-height: 1; text-shadow: 3px 3px 0 var(--surface); }
 
-        #autoModeBadge { 
-            position: absolute; top: -15px; right: -15px; display: none; background: var(--green); color: var(--dark); padding: 8px 20px; border-radius: 8px; border: 4px solid var(--dark); font-weight: 800; font-size: 1.2rem; z-index: 10; box-shadow: 4px 4px 0 var(--dark); animation: pulse 2s infinite;
-        }
-
+        #autoModeBadge { position: absolute; top: -15px; right: -15px; display: none; background: var(--green); color: var(--dark); padding: 8px 20px; border-radius: 8px; border: 4px solid var(--dark); font-weight: 800; font-size: 1.2rem; z-index: 10; box-shadow: 4px 4px 0 var(--dark); animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #kioskPopup { 
-            position: absolute; bottom: 170px; left: 20px; right: 20px; background: var(--surface); border: 5px solid var(--dark); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 10px 10px 0 var(--purple); display: none; z-index: 9999; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; 
-        }
+        #kioskPopup { position: absolute; bottom: 170px; left: 20px; right: 20px; background: var(--surface); border: 5px solid var(--dark); border-radius: 15px; padding: 25px; text-align: center; box-shadow: 10px 10px 0 var(--purple); display: none; z-index: 9999; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* LEADERBOARD */
         .leaderboard-wrapper { flex: 1; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent); }
         .scroll-track { display: flex; flex-direction: column; gap: 15px; animation: scrollUp 150s linear infinite; padding-right: 15px;}
         @keyframes scrollUp { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
@@ -111,7 +106,6 @@
         
         .lb-card p { margin: 0; font-size: 1.8rem; font-weight: 800; background: var(--primary); color: white; padding: 8px 25px; border-radius: 10px; border: 4px solid var(--dark); box-shadow: 4px 4px 0 var(--dark); text-shadow: 2px 2px 0 var(--dark); }
 
-        /* CELEBRATIONS */
         .celebration-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(36, 0, 70, 0.9); display: none; align-items: center; justify-content: center; z-index: 9999; flex-direction: column; overflow: hidden; }
         .sunburst { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vw; background: repeating-conic-gradient(var(--primary) 0 15deg, transparent 15deg 30deg); animation: spinBurst 15s linear infinite; z-index: -1; opacity: 0.4; transform: translate(-50%, -50%); }
         @keyframes spinBurst { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
@@ -121,7 +115,6 @@
         .anim-pop { animation: pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
         @keyframes pop { 0% { transform: scale(0.2) rotate(-10deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
         
-        /* VAULT */
         .mystery-box { font-size: 10rem; cursor: pointer; animation: shake 2s infinite ease-in-out; text-shadow: 8px 8px 0 var(--dark); }
         @keyframes shake { 0%, 100% { transform: rotate(0deg); } 20%, 60% { transform: rotate(-15deg); } 40%, 80% { transform: rotate(15deg); } }
         
@@ -136,6 +129,14 @@
         .prize-card img { width: 100px; height: 100px; border-radius: 10px; border: 4px solid var(--dark); margin-bottom: 15px; background: var(--yellow); }
         .prize-card h3 { margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark); }
         .prize-card p { margin: 0; font-size: 1.6rem; font-weight: 800; background: var(--orange); color: white; padding: 8px 20px; border-radius: 8px; border: 4px solid var(--dark); display: inline-block; text-shadow: 2px 2px 0 var(--dark); }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(36, 0, 70, 0.9); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface); padding: 30px; border-radius: 15px; max-width: 400px; width: 90%; text-align: center; position: relative; border: 6px solid var(--dark); box-shadow: 10px 10px 0 var(--yellow); }
+        .close-btn { position: absolute; top: 10px; right: 20px; font-size: 2.5rem; font-weight: 800; cursor: pointer; color: var(--dark); z-index: 100000; }
+        .settings-input { width: 100%; padding: 10px; font-size: 1.2rem; border-radius: 8px; border: 4px solid var(--dark); margin-bottom: 15px; box-sizing: border-box; font-family: 'Nunito', sans-serif; font-weight: 800; box-shadow: inset 3px 3px 0 rgba(0,0,0,0.1); }
+        .settings-label { text-align: left; display: block; font-weight: 800; color: var(--dark); margin-bottom: 5px; }
 
     </style>
 </head>
@@ -152,7 +153,6 @@
     </div>
 
     <div class="split-layout">
-        
         <div class="left-panel">
             <div class="top-bar">
                 <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Find a student...">
@@ -230,7 +230,6 @@
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3aW9laGFudXRjb2hreXVveWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MzE2MDcsImV4cCI6MjEwNzQwNzYwN30.NU3o5jnAV6D6y7dE054EqwbPtaDwNRaSj3DznJOp-lU";
         
         
-        // RENAMED TO dbClient to prevent CDN script collision
         const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const room = dbClient.channel('classroom');
 
@@ -250,14 +249,12 @@
         let isScrollPaused = false; 
         let is24HourFormat = false; 
 
-        // TIMER ENGINE
         let timerInterval = null;
         let timerSecondsLeft = 0;
 
         function startCountdownTimer(seconds) {
             clearInterval(timerInterval);
             timerSecondsLeft = seconds;
-            
             const timerBox = document.getElementById('timerBox');
             const timerDisplay = document.getElementById('timerDisplay');
             if (!timerBox || !timerDisplay) return;
@@ -332,9 +329,6 @@
             return strUrl;
         }
 
-        // ==========================================
-        // 📡 REALTIME BROADCAST RECEIVER
-        // ==========================================
         room.on('broadcast', { event: 'command' }, (payload) => {
             try {
                 const msg = payload.payload;
@@ -387,9 +381,6 @@
             }
         }).subscribe();
 
-        // ==========================================
-        // 📡 DATABASE REALTIME LISTENER
-        // ==========================================
         dbClient.channel('db-changes')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, payload => {
                 fetchStudentData(); 
@@ -516,15 +507,15 @@
             if (badge) badge.style.display = isAutoMode ? 'block' : 'none';
         }
 
-        // ==========================================
-        // 📥 FETCH DATA FROM SUPABASE
-        // ==========================================
         async function fetchStudentData() {
             try {
                 const { data, error } = await dbClient.from('students').select('*').order('name');
                 if (error) throw error;
                 
-                const newStudents = data.map(s => {
+                // FIX 4: Filter out any blank rows imported from CSV
+                const validData = data.filter(row => row.name && String(row.name).trim() !== "");
+
+                const newStudents = validData.map(s => {
                     return { 
                         Name: s.name, 
                         Points: s.points, 
@@ -610,17 +601,22 @@
                 return; 
             }
             
-            track.style.animation = 'scrollUp 150s linear infinite';
-            track.style.animationPlayState = isScrollPaused ? 'paused' : 'running';
+            track.style.animation = 'scrollUp linear infinite';
             
             if (knownStudentCount !== students.length || wasSearching) {
                 if (orderedStudents.length !== students.length) orderedStudents = shuffleArray([...students]);
                 track.innerHTML = buildCardsHTML(orderedStudents) + buildCardsHTML(orderedStudents);
+                
+                // FIX 1: Adjust scroll speed perfectly based on number of students (10 secs per student)
+                track.style.animationDuration = (orderedStudents.length * 10) + 's';
+                
                 knownStudentCount = students.length; 
                 wasSearching = false;
             } else { 
                 updateLeaderboardPoints(); 
             }
+            
+            track.style.animationPlayState = isScrollPaused ? 'paused' : 'running';
         }
         
         function buildCardsHTML(arr) { 
