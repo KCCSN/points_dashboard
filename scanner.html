@@ -242,11 +242,13 @@
         // ==========================================
         // 🚀 SUPABASE CONFIGURATION - ADD KEYS HERE
         // ==========================================
-        const SUPABASE_URL = "YOUR_PROJECT_URL";
-        const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+        const SUPABASE_URL = "https://gwioehanutcohkyuoyks.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3aW9laGFudXRjb2hreXVveWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MzE2MDcsImV4cCI6MjEwNzQwNzYwN30.NU3o5jnAV6D6y7dE054EqwbPtaDwNRaSj3DznJOp-lU";
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const room = supabase.channel('classroom');
+        
+        // RENAMED TO dbClient to prevent CDN script collision
+        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const room = dbClient.channel('classroom');
 
         let students = []; 
         let activeStudentName = 'none'; 
@@ -364,7 +366,7 @@
                 for(let name of allNames) {
                     const student = students.find(s => s.Name === name);
                     if(student) {
-                        await supabase.from('students').update({ points: student.Points + finalPts }).eq('name', name);
+                        await dbClient.from('students').update({ points: student.Points + finalPts }).eq('name', name);
                     }
                 }
                 
@@ -386,7 +388,7 @@
             for(let name of namesArray) {
                 const student = students.find(s => s.Name === name);
                 if(student) {
-                    await supabase.from('students').update({ points: student.Points + finalPts }).eq('name', name);
+                    await dbClient.from('students').update({ points: student.Points + finalPts }).eq('name', name);
                 }
             }
 
@@ -401,9 +403,9 @@
                 
                 const student = students.find(s => s.Name === name);
                 if(student) {
-                    await supabase.from('students').update({ points: student.Points - 15 }).eq('name', name);
+                    await dbClient.from('students').update({ points: student.Points - 15 }).eq('name', name);
                     loadData();
-                    revealPrizeVaultLocal(); // refresh vault UI locally
+                    revealPrizeVaultLocal(); 
                 }
             }
         }
@@ -537,7 +539,7 @@
             const newUrl = `https://api.dicebear.com/9.x/bottts/svg?seed=${safeName}&backgroundColor=${hex}`;
             document.getElementById('scanAvatar').src = newUrl;
             
-            await supabase.from('students').update({ avatar_url: newUrl }).eq('name', activeStudentName);
+            await dbClient.from('students').update({ avatar_url: newUrl }).eq('name', activeStudentName);
             sendRealtimeCommand('refreshData'); 
         }
 
@@ -561,7 +563,7 @@
             sendRealtimeCommand('addPoints', { name: activeStudentName, points: finalAmount, isDouble: isDouble });
             
             // Update Supabase DB directly
-            await supabase.from('students').update({ points: student.Points + finalAmount }).eq('name', activeStudentName);
+            await dbClient.from('students').update({ points: student.Points + finalAmount }).eq('name', activeStudentName);
             
             resetRemote(); 
             loadData();
@@ -574,7 +576,7 @@
             
             const student = students.find(s => s.Name === undoData.name);
             if(student) {
-                await supabase.from('students').update({ points: student.Points - undoData.points }).eq('name', undoData.name);
+                await dbClient.from('students').update({ points: student.Points - undoData.points }).eq('name', undoData.name);
             }
             
             const toast = document.getElementById('undoToast');
@@ -595,7 +597,7 @@
         // ==========================================
         async function loadData() {
             try {
-                const { data, error } = await supabase.from('students').select('*').order('name');
+                const { data, error } = await dbClient.from('students').select('*').order('name');
                 if (error) throw error;
                 
                 students = data.map(s => {
@@ -626,16 +628,16 @@
                 const fileName = `${Date.now()}.${fileExt}`;
                 
                 // Upload to Supabase 'uploads' bucket
-                const { error: uploadError } = await supabase.storage.from('uploads').upload(fileName, file);
+                const { error: uploadError } = await dbClient.storage.from('uploads').upload(fileName, file);
                 if (uploadError) throw uploadError;
 
                 // Get Public URL
-                const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+                const { data: publicUrlData } = dbClient.storage.from('uploads').getPublicUrl(fileName);
                 const imageUrl = publicUrlData.publicUrl;
                 
                 // Update Student Record
                 const columnToUpdate = type === 'artwork' ? 'artwork_url' : 'avatar_url';
-                const { error: dbError } = await supabase.from('students').update({ [columnToUpdate]: imageUrl }).eq('name', activeStudentName);
+                const { error: dbError } = await dbClient.from('students').update({ [columnToUpdate]: imageUrl }).eq('name', activeStudentName);
                 if (dbError) throw dbError;
                 
                 showToast(`✅ ${type} saved!`, true);

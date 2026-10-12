@@ -229,8 +229,10 @@
         const SUPABASE_URL = "https://gwioehanutcohkyuoyks.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3aW9laGFudXRjb2hreXVveWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MzE2MDcsImV4cCI6MjEwNzQwNzYwN30.NU3o5jnAV6D6y7dE054EqwbPtaDwNRaSj3DznJOp-lU";
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const room = supabase.channel('classroom');
+        
+        // RENAMED TO dbClient to prevent CDN script collision
+        const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const room = dbClient.channel('classroom');
 
         let students = []; 
         let orderedStudents = []; 
@@ -331,7 +333,7 @@
         }
 
         // ==========================================
-        // 📡 REALTIME BROADCAST RECEIVER (Replaces PubNub)
+        // 📡 REALTIME BROADCAST RECEIVER
         // ==========================================
         room.on('broadcast', { event: 'command' }, (payload) => {
             try {
@@ -374,7 +376,6 @@
                 else if (msg.action === "refreshData") {
                     fetchStudentData(); 
                 }
-                // Visual popups for points handled by Broadcast so they are instant
                 else if (msg.action === "addPoints") {
                     handlePointCelebration(msg.name, msg.points, msg.isDouble);
                 }
@@ -387,11 +388,11 @@
         }).subscribe();
 
         // ==========================================
-        // 📡 DATABASE REALTIME LISTENER (Replaces Sheet syncing)
+        // 📡 DATABASE REALTIME LISTENER
         // ==========================================
-        supabase.channel('db-changes')
+        dbClient.channel('db-changes')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, payload => {
-                fetchStudentData(); // Instantly re-fetch data if DB changes
+                fetchStudentData(); 
             })
             .subscribe();
 
@@ -400,7 +401,6 @@
             if (student) {
                 const oldPoints = parseInt(student.Points) || 0; 
                 if (pts < 0 && document.getElementById('revealedState').style.display === 'flex') {
-                    // Update visually instantly before DB finishes
                     student.Points += pts;
                     revealPrizes(true);
                 }
@@ -479,9 +479,8 @@
                     c.className = 'prize-card'; 
                     c.style.animationDelay = `${i * 0.15}s`; 
                     c.onclick = function() { 
-                        // Visual update instantly, DB update relies on phone or we can do it here
                         room.send({ type: 'broadcast', event: 'command', payload: { action: "addPoints", name: w.Name, points: -15, isDouble: false } });
-                        supabase.from('students').update({ points: w.Points - 15 }).eq('name', w.Name).then();
+                        dbClient.from('students').update({ points: w.Points - 15 }).eq('name', w.Name).then();
                     };
                     
                     c.innerHTML = `<img src="${w.AvatarURL}" alt="Winner Avatar"><h3 class="fredoka">${w.Name}</h3><p class="pts-badge">⭐ ${w.Points}</p>`; 
@@ -522,7 +521,7 @@
         // ==========================================
         async function fetchStudentData() {
             try {
-                const { data, error } = await supabase.from('students').select('*').order('name');
+                const { data, error } = await dbClient.from('students').select('*').order('name');
                 if (error) throw error;
                 
                 const newStudents = data.map(s => {
@@ -545,8 +544,6 @@
                 updateClassGoal(); 
                 updateArtworkLoop(); 
                 renderLeaderboard(); 
-                // Note: We don't auto-process celebrations here anymore to avoid double-firing. 
-                // Realtime broadcast handles the trigger instantly!
             } catch (error) {
                 console.error("Data fetch failed.", error);
             }
